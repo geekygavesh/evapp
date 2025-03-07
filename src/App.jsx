@@ -1,24 +1,23 @@
 
+import {  BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import './App.css'
-import { doc, getDoc } from 'firebase/firestore' 
-import { db } from './firebase-config'
-import { useEffect } from 'react'
+import Navbar from './components/Navbar'
+import Home from './pages/Home'
+import Login from './pages/Login'
+import Stations from './pages/Stations'
+
 function App() {
-
-  const docref = doc(db,"users","nyozufsJCLcYnHFHBhBe")
-
-  const getdata = async()=>{
-    const docsnap = await getDoc(docref)
-    console.log(docsnap.data());
-    
-  }
-  useEffect(()=>{
-    getdata()
-  },[])
+ 
   return (
-    <>
-      <h1 className="text-red-500">HELLO </h1>
-    </>
+    <Router>
+      <Navbar />
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/stations" element={<Stations />} />
+          <Route path="/login" element={<Login />} />
+        </Routes>
+      
+    </Router>
   )
 }
 
