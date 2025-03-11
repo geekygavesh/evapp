@@ -2,6 +2,7 @@ import {  doc, setDoc, getDoc } from "firebase/firestore";
 import { db, auth } from "../firebase-config"; 
 import { GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 
 function Navbar() {
   const [user, setUser] = useState(null);
@@ -59,8 +60,8 @@ function Navbar() {
     <>
       <nav className="w-full fixed top-0 left-0 bg-gradient-to-r from-emerald-700 to-green-500 text-white p-4 flex justify-between items-center shadow-md z-50">
         <ul className="flex gap-6 text-lg">
-          <li>Home</li>
-          <li>Stations</li>
+        <li><Link to="/">Home</Link></li>
+        <li><Link to="/stations">Stations</Link></li>
         </ul>
 
         {user ? (
