@@ -33,21 +33,40 @@ function MapComponent() {
       />
       {stationsData.map((station) => (
         <Marker key={station.id} position={station.position} icon={customIcon}>
-          <Popup>
-            <strong>{station.name}</strong>
-            <br />
-            {station.address}
-            <br />
-            Slots Available: {station.availableSlots}
-            
-            <br />
-          {station.availableSlots > 0 ? (
-            <button onClick={() => bookStation(station.id, 'USER_ID_HERE')}>
-              Book Slot
-            </button>) : 
-            ( <span>No slots available</span>)
-          }
-          </Popup>
+          <Popup className="p-4 bg-white rounded-lg shadow-lg border border-gray-300 w-64">
+  <div className="text-center">
+    {/* Station Name */}
+    <strong className="text-md text-gray-900 block">{station.name}</strong>
+
+    {/* Address */}
+    <p className="text-xs text-gray-600 mt-1">{station.address}</p>
+
+    {/* Slots Available */}
+    <p className="text-sm font-semibold mt-2">
+      Slots Available:{" "}
+      <span className={station.availableSlots > 0 ? "text-green-600" : "text-red-600"}>
+        {station.availableSlots}
+      </span>
+    </p>
+
+    {/* Booking Button or No Slots Message */}
+    <div className="mt-3">
+      {station.availableSlots > 0 ? (
+        <button
+          className="px-4 py-2 font-bold text-white bg-gradient-to-r from-green-700 to-green-500 rounded-md shadow-md hover:from-green-800 hover:to-green-400 transition-all transform hover:scale-105 text-sm"
+          onClick={() => bookStation(station.id, 'USER_ID_HERE')}
+        >
+           Book Slot
+        </button>
+      ) : (
+        <span className="text-red-500 font-semibold text-xs bg-red-100 px-2 py-1 rounded-md">
+          ❌ No slots
+        </span>
+      )}
+    </div>
+  </div>
+</Popup>
+
         </Marker>
       ))}
     </MapContainer>
