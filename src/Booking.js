@@ -1,39 +1,42 @@
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, query, where, getDocs, collection } from 'firebase/firestore';
 import { db } from './firebase-config';
-import { updateSlotAvailability } from './updateSlotAvailability'; // Ensure this function exists
+import { updateSlotAvailability } from './updateSlotAvailability'; 
 
 export const bookStation = async (stationId, userId, availableSlots) => {
-  console.log("📌 Booking station:", stationId);
+  console.log("📌 Checking existing bookings for:", stationId, userId);
 
-  // Convert stationId to a string if it's not already
   const stationIdString = String(stationId);
 
-  if (!stationIdString || typeof stationIdString !== 'string') {
-    console.error("❌ Error: Invalid stationId!", stationId);
+  // Fetch existing bookings to prevent duplicate bookings
+  const bookingsRef = collection(db, 'bookings');
+  const q = query(bookingsRef, where("stationId", "==", stationIdString), where("userId", "==", userId));
+  const existingBookings = await getDocs(q);
+
+  if (!existingBookings.empty) {
+    alert("⚠ You have already booked a slot at this station!");
     return;
   }
 
-  if (!userId || typeof userId !== 'string') {
-    console.error("❌ Error: Invalid userId!", userId);
+  if (availableSlots <= 0) {
+    alert("⚠ No slots available for booking!");
     return;
   }
 
+  // Create a unique booking ID
+  const bookingId = `${stationIdString}_${userId}_${Date.now()}`;
+  const bookingRef = doc(db, 'bookings', bookingId);
 
-  try {
-    const bookingId = `${stationIdString}_${userId}_${Date.now()}`;
-    const bookingRef = doc(db, 'bookings', bookingId);
+  await setDoc(bookingRef, {
+    stationId: stationIdString,
+    userId,
+    bookedAt: serverTimestamp(),
+    slotsBooked: 1,
+    availableSlots: availableSlots - 1, // Store new slot count in the booking
+  });
 
-    await setDoc(bookingRef, {
-      stationId: stationIdString,
-      userId,
-      bookedAt: serverTimestamp(),
-      slotsBooked: 1,
-    });
+  // ✅ Fix: Ensure the correct document is updated
+  await updateSlotAvailability(bookingId, availableSlots - 1);
 
-    await updateSlotAvailability(stationIdString, availableSlots - 1);
-
-    console.log("✅ Booking successful!");
-  } catch (error) {
-    console.error("❌ Error booking station:", error);
-  }
+  console.log("✅ Booking successful!");
+  alert("✅ Slot booked successfully!");
 };
