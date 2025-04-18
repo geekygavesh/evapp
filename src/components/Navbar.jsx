@@ -1,11 +1,12 @@
-import {  doc, setDoc, getDoc } from "firebase/firestore";
-import { db, auth } from "../firebase-config"; 
+import { doc, setDoc, getDoc } from "firebase/firestore";
+import { db, auth } from "../firebase-config";
 import { GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 function Navbar() {
   const [user, setUser] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
@@ -14,9 +15,9 @@ function Navbar() {
         const userSnap = await getDoc(userRef);
 
         if (userSnap.exists()) {
-          setUser(userSnap.data()); // Load data from Firestore
+          setUser(userSnap.data());
         } else {
-          setUser(user); // Default to Firebase Auth data
+          setUser(user);
         }
       } else {
         setUser(null);
@@ -32,7 +33,6 @@ function Navbar() {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
 
-      // Store user data in Firestore
       const userRef = doc(db, "users", user.uid);
       await setDoc(userRef, {
         name: user.displayName,
@@ -51,22 +51,29 @@ function Navbar() {
     try {
       await signOut(auth);
       setUser(null);
+      navigate("/"); // Redirect to Home on logout
     } catch (error) {
       console.error("Logout Error:", error);
     }
+  };
+
+  const goToProfile = () => {
+    navigate("/profile");
   };
 
   return (
     <>
       <nav className="w-full fixed top-0 left-0 bg-gradient-to-r from-emerald-700 to-green-500 text-white p-4 flex justify-between items-center shadow-md z-50">
         <ul className="flex gap-6 text-lg">
-        <li><Link to="/">Home</Link></li>
-        <li><Link to="/stations">Stations</Link></li>
+          <li><Link to="/">Home</Link></li>
+          <li><Link to="/stations">Stations</Link></li>
         </ul>
 
         {user ? (
           <div className="flex items-center gap-4">
-            <span>{user.name || "User"}</span>
+            <button onClick={goToProfile} className="font-semibold hover:underline">
+              {user.name || "Profile"}
+            </button>
             <button onClick={handleLogout} className="p-2 bg-red-500 rounded-lg">Logout</button>
           </div>
         ) : (
