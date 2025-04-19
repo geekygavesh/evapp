@@ -1,17 +1,16 @@
-// src/pages/Stations.jsx
 import React, { useEffect, useState } from 'react';
-import { collection, onSnapshot } from 'firebase/firestore';
+import { collection, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase-config';
 import MapComponent from '../components/MapComponent';
 
 function Stations() {
-  const [stations, setStations] = useState([]); 
+  const [stations, setStations] = useState([]);
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [selectedStation, setSelectedStation] = useState(null);
 
   useEffect(() => {
     // Listen to real-time updates on the stations collection
-    const stationsRef = collection(db, 'stations'); // Changed from 'bookings' to 'stations'
+    const stationsRef = collection(db, 'stations');
     const unsubscribe = onSnapshot(stationsRef, (snapshot) => {
       const stationsList = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
       setStations(stationsList);
@@ -20,21 +19,32 @@ function Stations() {
     return () => unsubscribe();
   }, []);
 
-  // Function to handle booking confirmation
-  const handleBookSlot = (station) => {
+  // Function to handle booking confirmation and Firestore update
+  const handleBookSlot = async (station) => {
     if (station.availableSlots <= 0) {
       alert("⚠ No slots available at this station!");
       return;
     }
 
-    setSelectedStation(station);
-    setBookingSuccess(true);
+    try {
+      // Update available slots in Firestore
+      const stationRef = doc(db, 'stations', station.id);
+      await updateDoc(stationRef, {
+        availableSlots: station.availableSlots - 1,
+      });
 
-    // Automatically hide the message after 3 seconds
-    setTimeout(() => {
-      setBookingSuccess(false);
-      setSelectedStation(null);
-    }, 3000);
+      setSelectedStation(station);
+      setBookingSuccess(true);
+
+      // Automatically hide the message after 3 seconds
+      setTimeout(() => {
+        setBookingSuccess(false);
+        setSelectedStation(null);
+      }, 3000);
+    } catch (error) {
+      console.error("❌ Error booking slot:", error);
+      alert("Failed to book slot — try again!");
+    }
   };
 
   return (
@@ -48,7 +58,7 @@ function Stations() {
         </div>
       )}
 
-      {/* ✅ Re-added the Map Component */}
+      {/* Map Component */}
       <MapComponent stations={stations} onBookSlot={handleBookSlot} />
 
       {/* Station List with Available Slots */}
@@ -60,7 +70,11 @@ function Stations() {
               <p>Available Slots: {station.availableSlots ?? "N/A"}</p>
             </div>
             <button
-              className={`px-4 py-2 rounded ${station.availableSlots > 0 ? 'bg-blue-500 text-white' : 'bg-gray-400 cursor-not-allowed'}`}
+              className={`px-4 py-2 rounded ${
+                station.availableSlots > 0
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-400 cursor-not-allowed'
+              }`}
               onClick={() => handleBookSlot(station)}
               disabled={station.availableSlots <= 0}
             >
