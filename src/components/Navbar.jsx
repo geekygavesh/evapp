@@ -34,12 +34,26 @@ function Navbar() {
       const user = result.user;
 
       const userRef = doc(db, "users", user.uid);
-      await setDoc(userRef, {
-        name: user.displayName,
-        email: user.email,
-        uid: user.uid,
-        createdAt: new Date(),
-      }, { merge: true });
+      const userSnap = await getDoc(userRef);
+
+      if (!userSnap.exists()) {
+        // First-time user — create user document with wallet balance
+        await setDoc(userRef, {
+          name: user.displayName,
+          email: user.email,
+          uid: user.uid,
+          createdAt: new Date(),
+          balance: 500 // 👈 starting balance ₹500
+        });
+      } else {
+        // Existing user, merge latest data without changing balance
+        await setDoc(userRef, {
+          name: user.displayName,
+          email: user.email,
+          uid: user.uid,
+          lastUpdated: new Date()
+        }, { merge: true });
+      }
 
       console.log("User saved to Firestore:", user);
     } catch (error) {

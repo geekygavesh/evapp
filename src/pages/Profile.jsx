@@ -70,6 +70,12 @@ function Profile() {
             <span>{userData.email}</span>
           </div>
 
+          {/* ✅ Wallet Balance Section */}
+          <div className="flex justify-between bg-green-100 p-3 rounded-lg shadow text-green-800 font-semibold">
+            <span>💰 Wallet Balance:</span>
+            <span>₹{userData.walletBalance}</span>
+          </div>
+
           {editMode ? (
             <>
               <div className="flex flex-col gap-2">
@@ -132,11 +138,10 @@ function Profile() {
 
               <button
                 onClick={() => setEditMode(true)}
-                 className="w-full mt-5 bg-emerald-600 text-white py-2 rounded-lg hover:bg-emerald-700 transition"
-                >
+                className="w-full mt-5 bg-emerald-600 text-white py-2 rounded-lg hover:bg-emerald-700 transition"
+              >
                 Edit Profile
-                </button>
-
+              </button>
             </>
           )}
         </div>
