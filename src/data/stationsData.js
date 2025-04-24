@@ -87,4 +87,29 @@ export const stationsData = [
     totalSlots: 7,
     availableSlots: 5,
   },
+  {
+    id: 12,
+    name: 'IISER Mohali Station',
+    position: [30.6675, 76.7295],
+    address: 'IISER Mohali Campus Road, Knowledge City, Sector 81, Mohali',
+    totalSlots: 6,
+    availableSlots: 4,
+  },
+  {
+    id: 14,
+    name: 'IISER Mohali Station',
+    position: [30.6770, 76.7820],
+    address: 'IISER Mohali Campus Road, Knowledge City, Sector 81, Mohali',
+    totalSlots: 6,
+    availableSlots: 4,
+  },
+  {
+    id: 15,
+    name: 'IISER Mohali Station',
+    position: [30.6870, 76.7920],
+    address: 'IISER Mohali Campus Road, Knowledge City, Sector 81, Mohali',
+    totalSlots: 6,
+    availableSlots: 4,
+  },
+  
 ];

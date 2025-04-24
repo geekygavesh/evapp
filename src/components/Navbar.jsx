@@ -43,7 +43,7 @@ function Navbar() {
           email: user.email,
           uid: user.uid,
           createdAt: new Date(),
-          balance: 500 // 👈 starting balance ₹500
+          walletBalance: 500 // 👈 starting balance ₹500
         });
       } else {
         // Existing user, merge latest data without changing balance
@@ -51,7 +51,8 @@ function Navbar() {
           name: user.displayName,
           email: user.email,
           uid: user.uid,
-          lastUpdated: new Date()
+          lastUpdated: new Date(),
+          walletBalance: 500
         }, { merge: true });
       }
 

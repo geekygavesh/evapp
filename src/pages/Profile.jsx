@@ -10,6 +10,7 @@ function Profile() {
     brand: "",
     phone: ""
   });
+  const [rechargeAmount, setRechargeAmount] = useState("");
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -51,6 +52,24 @@ function Profile() {
     }
   };
 
+  const handleRecharge = async () => {
+    const user = auth.currentUser;
+    if (user && rechargeAmount > 0) {
+      const userRef = doc(db, "users", user.uid);
+      const newBalance = (userData.walletBalance || 0) + parseFloat(rechargeAmount);
+
+      await updateDoc(userRef, {
+        walletBalance: newBalance
+      });
+
+      setUserData(prev => ({ ...prev, walletBalance: newBalance }));
+      setRechargeAmount(""); // Clear input
+      alert(`✅ ₹${rechargeAmount} added to wallet!`);
+    } else {
+      alert("⚠ Enter a valid recharge amount!");
+    }
+  };
+
   if (!userData) {
     return <div className="p-4 text-center text-gray-500">Loading profile...</div>;
   }
@@ -68,12 +87,6 @@ function Profile() {
           <div className="flex justify-between">
             <span className="font-semibold">Email:</span>
             <span>{userData.email}</span>
-          </div>
-
-          {/* ✅ Wallet Balance Section */}
-          <div className="flex justify-between bg-green-100 p-3 rounded-lg shadow text-green-800 font-semibold">
-            <span>💰 Wallet Balance:</span>
-            <span>₹{userData.walletBalance}</span>
           </div>
 
           {editMode ? (
@@ -144,6 +157,33 @@ function Profile() {
               </button>
             </>
           )}
+
+          {/* ✅ Wallet Balance Section */}
+          <div className="flex justify-between bg-green-100 p-3 rounded-lg shadow text-green-800 font-semibold">
+            <span>💰 Wallet Balance:</span>
+            <span>₹{userData.walletBalance}</span>
+          </div>
+
+          {/* ✅ Recharge Wallet */}
+          <div className="mt-4 space-y-2">
+            <label className="font-semibold">Recharge Wallet:</label>
+            <div className="flex gap-2">
+              <input
+                type="number"
+                value={rechargeAmount}
+                onChange={(e) => setRechargeAmount(e.target.value)}
+                className="border border-gray-300 p-2 rounded-lg flex-1"
+                placeholder="Enter amount"
+              />
+              <button
+                onClick={handleRecharge}
+                className="bg-emerald-500 text-white px-4 py-2 rounded-lg hover:bg-emerald-600 transition"
+              >
+                Add ₹
+              </button>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>

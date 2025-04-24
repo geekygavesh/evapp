@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { collection, onSnapshot, doc, updateDoc } from 'firebase/firestore';
-import { db } from '../firebase-config';
+import { collection, onSnapshot, doc, updateDoc, getDoc } from 'firebase/firestore';
+import { db, auth } from '../firebase-config';
 import MapComponent from '../components/MapComponent';
 
 function Stations() {
   const [stations, setStations] = useState([]);
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [selectedStation, setSelectedStation] = useState(null);
+  const [walletBalance, setWalletBalance] = useState(0);
+
+  const bookingFee = 50; // Booking fee to be deducted
 
   useEffect(() => {
     // Listen to real-time updates on the stations collection
@@ -15,6 +18,20 @@ function Stations() {
       const stationsList = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
       setStations(stationsList);
     });
+
+    // Fetch current user's wallet balance
+    const fetchWalletBalance = async () => {
+      const user = auth.currentUser;
+      if (user) {
+        const userRef = doc(db, 'users', user.uid);
+        const userSnap = await getDoc(userRef);
+        if (userSnap.exists()) {
+          setWalletBalance(userSnap.data().walletBalance || 0);
+        }
+      }
+    };
+
+    fetchWalletBalance();
 
     return () => unsubscribe();
   }, []);
@@ -26,6 +43,12 @@ function Stations() {
       return;
     }
 
+    // Check if user has enough wallet balance
+    if (walletBalance < bookingFee) {
+      alert("❌ Insufficient wallet balance!");
+      return;
+    }
+
     try {
       // Update available slots in Firestore
       const stationRef = doc(db, 'stations', station.id);
@@ -33,10 +56,20 @@ function Stations() {
         availableSlots: station.availableSlots - 1,
       });
 
+      // Deduct booking fee from wallet and update Firestore
+      const user = auth.currentUser;
+      const userRef = doc(db, 'users', user.uid);
+      await updateDoc(userRef, {
+        walletBalance: walletBalance - bookingFee,
+      });
+
+      // Update local state balance
+      setWalletBalance(walletBalance - bookingFee);
+
       setSelectedStation(station);
       setBookingSuccess(true);
 
-      // Automatically hide the message after 3 seconds
+      // Automatically hide the success message after 3 seconds
       setTimeout(() => {
         setBookingSuccess(false);
         setSelectedStation(null);
@@ -51,17 +84,18 @@ function Stations() {
     <div className="p-4">
       <h1 className="text-2xl mb-4">Find Charging Stations</h1>
 
-      {/* Booking Confirmation Message */}
+      <div className="mb-4 p-2 bg-green-100 text-green-700 rounded">
+        💰 Wallet Balance: ₹{walletBalance}
+      </div>
+
       {bookingSuccess && selectedStation && (
         <div className="fixed top-10 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded shadow-lg">
-          ✅ Slot booked successfully at {selectedStation.name}!
+          ✅ Slot booked successfully at {selectedStation.name}! ₹{bookingFee} deducted.
         </div>
       )}
 
-      {/* Map Component */}
       <MapComponent stations={stations} onBookSlot={handleBookSlot} />
 
-      {/* Station List with Available Slots */}
       <ul className="mt-4">
         {stations.map((station) => (
           <li key={station.id} className="p-4 border-b flex justify-between items-center">
@@ -78,7 +112,7 @@ function Stations() {
               onClick={() => handleBookSlot(station)}
               disabled={station.availableSlots <= 0}
             >
-              {station.availableSlots > 0 ? "Book Slot" : "Full"}
+              {station.availableSlots > 0 ? `Book (₹${bookingFee})` : "Full"}
             </button>
           </li>
         ))}
