@@ -15,7 +15,7 @@ export const bookStation = async (stationId, userId, availableSlots) => {
   if (!existingBookings.empty) {
     alert("⚠ You have already booked a slot at this station!");
     return;
-  }
+  } 
 
   if (availableSlots <= 0) {
     alert("⚠ No slots available for booking!");
@@ -34,7 +34,7 @@ export const bookStation = async (stationId, userId, availableSlots) => {
     availableSlots: availableSlots - 1, // Store new slot count in the booking
   });
 
-  // ✅ Fix: Ensure the correct document is updated
+  //  Fix: Ensure the correct document is updated
   await updateSlotAvailability(bookingId, availableSlots - 1);
 
   console.log("✅ Booking successful!");
