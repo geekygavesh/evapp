@@ -53,21 +53,45 @@ function Profile() {
   };
 
   const handleRecharge = async () => {
-    const user = auth.currentUser;
-    if (user && rechargeAmount > 0) {
-      const userRef = doc(db, "users", user.uid);
-      const newBalance = (userData.walletBalance || 0) + parseFloat(rechargeAmount);
-
-      await updateDoc(userRef, {
-        walletBalance: newBalance
-      });
-
-      setUserData(prev => ({ ...prev, walletBalance: newBalance }));
-      setRechargeAmount(""); // Clear input
-      alert(`✅ ₹${rechargeAmount} added to wallet!`);
-    } else {
+    if (!rechargeAmount || parseFloat(rechargeAmount) <= 0) {
       alert("⚠ Enter a valid recharge amount!");
+      return;
     }
+
+    const amountInPaise = parseFloat(rechargeAmount) * 100;
+
+    const options = {
+      key: "rzp_test_CnjnObSILAzcR4", // Replace with your Razorpay Key ID
+      amount: amountInPaise,
+      currency: "INR",
+      name: "EV Charge Croww",
+      description: "Wallet Recharge",
+      handler: async function (response) {
+        const user = auth.currentUser;
+        if (user) {
+          const userRef = doc(db, "users", user.uid);
+          const newBalance = (userData.walletBalance || 0) + parseFloat(rechargeAmount);
+
+          await updateDoc(userRef, {
+            walletBalance: newBalance
+          });
+
+          setUserData(prev => ({ ...prev, walletBalance: newBalance }));
+          setRechargeAmount("");
+          alert(`✅ ₹${rechargeAmount} successfully added to wallet!`);
+        }
+      },
+      prefill: {
+        email: userData.email,
+        contact: userData.phone
+      },
+      theme: {
+        color: "#10B981"
+      }
+    };
+
+    const rzp = new window.Razorpay(options);
+    rzp.open();
   };
 
   if (!userData) {
